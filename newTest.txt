@@ -1,0 +1,10 @@
+< a a a d >
+[ wind hum temp trip ]
+4 lo med yes
+8 lo lo yes
+4 med med yes
+8 med hi maybe
+12 lo med maybe
+16 hi lo no
+30 hi hi no
+12 hi hi no

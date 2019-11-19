@@ -1,0 +1,10 @@
+< a a a d >
+[ SIZE INK-COLOR BODY-COLOR Attitude ]
+small blue blue +
+large blue black -
+large red blue +
+small black blue -
+large black blue -
+large blue blue +
+large black black -
+small blue black -
