@@ -155,28 +155,29 @@ void Dataset<T>::LEM2(){
     //START: looping through concepts
     for(vector<set<int>*>::iterator concept = m_decision->m_avBlocks->begin(); concept != m_decision->m_avBlocks->end(); ++concept){
         set<int>* goal = new set<int>(**concept);
+        set<int>* main_goal = new set<int>(**concept);
         bool newIntersectionNeeded = true;
 
         cout << "\n\nNEXT------------------------CONCEPT--------------------------------->\n";
-        while(!goal->empty()){   //!goal->empty()     
+        while(!main_goal->empty()){   //!goal->empty()     
             //STEP1: looping through all AVBlocks of all cols
-            if(newIntersectionNeeded){
-                // for(typename vector<Column<T>*>::iterator attrCol = m_attrs.begin(); attrCol != m_attrs.end(); ++attrCol){
-                //     //looping through blocks in current col
-                //     vector<set<int>*>* currColBlocks = (*attrCol)->m_avBlocks;
-                //     for(vector<set<int>*>::iterator block = currColBlocks->begin(); block != currColBlocks->end(); ++block){
-                //         set<int>* result = new set<int>();
-                //         //intersect curr block with goal
-                //         set_intersection((*block)->begin(),(*block)->end(),goal->begin(),goal->end(), inserter(*result,result->begin()));
-                //         intersectedBlocks->push_back(result);
-                //     }
-                // }
-                for(vector<set<int>*>::iterator block = m_All_avBlocks->begin(); block != m_All_avBlocks->end(); ++block){
-                    set<int>* result = new set<int>();
-                    set_intersection((*block)->begin(),(*block)->end(),goal->begin(),goal->end(), inserter(*result,result->begin()));
-                    intersectedBlocks->push_back(result);
-                }
-            }
+            // if(newIntersectionNeeded){
+            //     // for(typename vector<Column<T>*>::iterator attrCol = m_attrs.begin(); attrCol != m_attrs.end(); ++attrCol){
+            //     //     //looping through blocks in current col
+            //     //     vector<set<int>*>* currColBlocks = (*attrCol)->m_avBlocks;
+            //     //     for(vector<set<int>*>::iterator block = currColBlocks->begin(); block != currColBlocks->end(); ++block){
+            //     //         set<int>* result = new set<int>();
+            //     //         //intersect curr block with goal
+            //     //         set_intersection((*block)->begin(),(*block)->end(),goal->begin(),goal->end(), inserter(*result,result->begin()));
+            //     //         intersectedBlocks->push_back(result);
+            //     //     }
+            //     // }
+            //     for(vector<set<int>*>::iterator block = m_All_avBlocks->begin(); block != m_All_avBlocks->end(); ++block){
+            //         set<int>* result = new set<int>();
+            //         set_intersection((*block)->begin(),(*block)->end(),goal->begin(),goal->end(), inserter(*result,result->begin()));
+            //         intersectedBlocks->push_back(result);
+            //     }
+            // }
             //print step1
             // int blockNum = 1;
             // vector<set<int>*>::iterator avBlock = m_All_avBlocks->begin();
@@ -189,77 +190,177 @@ void Dataset<T>::LEM2(){
             //     ++avBlock;
             //     blockNum++;
             // }
-            
-            //STEP2: choose best entry in column
-            currSelection = selectBestIndex(intersectedBlocks, originAVCardinality);
-
-            //STEP3: save the vector index of the cases used in the current rule
-            indexesSelected->push_back(currSelection);
-            if(ruleCoverBlock == nullptr){
-                //result of first column of rule generation filling current rule cover with original AVBlock set
-                ruleCoverBlock = new set<int>(*(m_All_avBlocks->at(currSelection)));
-                cout << "ruleCover due to FIRST selection: selected block=" << currSelection << "\n";
-                printSet(ruleCoverBlock);
+            //inner while
+            for(vector<set<int>*>::iterator block = m_All_avBlocks->begin(); block != m_All_avBlocks->end(); ++block){
+                set<int>* result = new set<int>();
+                set_intersection((*block)->begin(),(*block)->end(),main_goal->begin(),main_goal->end(), inserter(*result,result->begin()));
+                intersectedBlocks->push_back(result);
             }
-            else{
-                //result following columns of rule being generated intersecting rule cover with current selection 
-                set<int>* newRuleCover = new set<int>();
-                set_intersection(m_All_avBlocks->at(currSelection)->begin(),m_All_avBlocks->at(currSelection)->end(),ruleCoverBlock->begin(),ruleCoverBlock->end(), inserter(*newRuleCover,newRuleCover->begin()));
-                //put a check here to see if the result of intersection is empty set if so do 
-                //something to prevent that being the outcome of the rule
-                if(!newRuleCover->empty()){
-                    delete ruleCoverBlock;
-                    ruleCoverBlock = newRuleCover;
+            while(indexesSelected->empty() || !isSubset(ruleCoverBlock, (* concept))){
+                // cout << "\n\nINNER LOOP BEGIN: concept\n\t";
+                // printSet(*concept);
+                // cout << "INNER LOOP BEGIN: main goal\n\t";
+                // printSet(main_goal);
+                // cout << "INNER LOOP BEGIN: initial goal\n\t";
+                // printSet(goal);
+                // cout << "INNER LOOP BEGIN: covered by rule in progress\n\t";
+                // if(ruleCoverBlock != nullptr){ printSet(ruleCoverBlock); }
+                // else{ cout << "{empty}\n"; }
+                // cout << "\n\n";
+                //STEP2: choose best entry in column
+                currSelection = selectBestIndex(intersectedBlocks, originAVCardinality);
+                //STEP3: save the vector index of the cases used in the current rule
+                indexesSelected->push_back(currSelection);
+                if(ruleCoverBlock == nullptr){//update rule cover with selection
+                    //result of first column of rule generation filling current rule cover with original AVBlock set
+                    ruleCoverBlock = new set<int>(*(m_All_avBlocks->at(currSelection)));
+                    //cout << "ruleCover due to FIRST selection: selected block=" << currSelection << "\n\t";
+                    printSet(ruleCoverBlock);
                 }
-                cout << "ruleCover after adding new selection: selected block=" << currSelection << "\n";
-                printSet(ruleCoverBlock);
-            }
-            
-            //check if rule is subset of concept, if so its finished
-            if(isSubset(ruleCoverBlock, (* concept))){
-                finalRules->push_back(prodRuleStr(blockNames, indexesSelected, conceptNames->at(conceptIndex)));
-                finalRulesBBValues->push_back("("+to_string(indexesSelected->size())+","+to_string(ruleCoverBlock->size())+","+to_string(ruleCoverBlock->size())+")");
-                set<int>* res = new set<int>();
-                cout << "goal size: " << goal->size() << "\nrule size: " << ruleCoverBlock->size() << "\n";
-                set_difference(goal->begin(), goal->end(), ruleCoverBlock->begin(), ruleCoverBlock->end(), inserter(*res, res->begin()));
-                delete goal;
-                goal = res;
-                cout << "\nNEW GOAL:\n";
-                if(goal != nullptr){
-                    printSet(goal);
+                else{
+                    //result following columns of rule being generated intersecting rule cover with current selection 
+                    set<int>* newRuleCover = new set<int>();
+                    set_intersection(m_All_avBlocks->at(currSelection)->begin(),m_All_avBlocks->at(currSelection)->end(),ruleCoverBlock->begin(),ruleCoverBlock->end(), inserter(*newRuleCover,newRuleCover->begin()));
+                    if(!newRuleCover->empty()){
+                        delete ruleCoverBlock;
+                        ruleCoverBlock = new set<int>(*newRuleCover);
+                        delete newRuleCover;
+                    }
+                    //cout << "ruleCover after adding new selection: selected block=" << currSelection << "\n\t";
+                    printSet(ruleCoverBlock);
                 }
-                else{cout << "goal is nullptr\n";}
-                cout << "\n\nNEXT--------------------------------------------------------->\n";
-                for(vector<set<int>*>::iterator block = intersectedBlocks->begin(); block != intersectedBlocks->end(); ++block){
-                    (*block)->clear();
-                    //delete *block;
-                }
-                intersectedBlocks->clear();
-                indexesSelected->clear();
-                delete ruleCoverBlock;
-                ruleCoverBlock = nullptr;//delete and set to nullptr so the next iteration inits ruleCoverBlock with first currSelection AVBlock
-                newIntersectionNeeded = true;
-            }//continue generating unfinished rule
-            else{
-                cout << "\nCover in progress: ";
-                printSet(ruleCoverBlock);
-                cout << "GOAL IN PROGRESS: ";
-                printSet(goal);
+                //STEP4: created subgoal, although usually will be same
                 set<int>* subGoal = new set<int>();
-                cout << "goal size: " << goal->size() << "\nrule size: " << ruleCoverBlock->size() << "\n";
+                //cout << "goal size: " << goal->size() << "\nrule size: " << ruleCoverBlock->size() << "\n";
                 set_intersection(goal->begin(), goal->end(), m_All_avBlocks->at(currSelection)->begin(), m_All_avBlocks->at(currSelection)->end(), inserter(*subGoal, subGoal->begin()));
-                delete goal;
-                goal = subGoal;
-                //LEM2 table index that was selected while generating current SINGLE rule is cleared(i.e. put dash in row box already used)
+                
+                //STEP5: re-intersect the subgoal with the AVBlocks and fill new column of LEM2 table
+                if(*goal != *subGoal && !subGoal->empty()){ 
+                    delete goal;
+                    goal = new set<int>(*subGoal);
+                    delete subGoal;
+                    for(vector<set<int>*>::iterator block = intersectedBlocks->begin(); block != intersectedBlocks->end(); ++block){
+                        (*block)->clear();
+                    }
+                    intersectedBlocks->clear();                   
+                    for(vector<set<int>*>::iterator block = m_All_avBlocks->begin(); block != m_All_avBlocks->end(); ++block){
+                        set<int>* result = new set<int>();
+                        set_intersection((*block)->begin(),(*block)->end(),goal->begin(),goal->end(), inserter(*result,result->begin()));
+                        intersectedBlocks->push_back(result);
+                    }
+                }
+                //STEP6: Clear row entry that was selected this iteration(i.e. put dash in row box already used)
                 for(vector<int>::iterator index = indexesSelected->begin(); index != indexesSelected->end(); ++index){
                     set<int>* lemColBlock = intersectedBlocks->at(*index);
                     if(!lemColBlock->empty()){
                         lemColBlock->clear();
                     }
                 }
-                newIntersectionNeeded = false;
+                // cout << "\n\nINNER LOOP END: concept\n\t";
+                // printSet(*concept);
+                // cout << "INNER LOOP END: main goal\n\t";
+                // printSet(main_goal);
+                // cout << "INNER LOOP END: initial goal\n\t";
+                // printSet(goal);
+                // cout << "INNER LOOP END: covered by rule in progress\n\t";
+                // printSet(ruleCoverBlock);
+                // cout << "\n\n";
+
             }
+            // cout << "OUTER LOOP END: cases covered by rule produced\n\t";
+            //     printSet(ruleCoverBlock);
+            //STEP7: Save generated rule in final rule set container 
+            finalRules->push_back(prodRuleStr(blockNames, indexesSelected, conceptNames->at(conceptIndex)));
+            finalRulesBBValues->push_back("("+to_string(indexesSelected->size())+","+to_string(ruleCoverBlock->size())+","+to_string(ruleCoverBlock->size())+")");
+            //STEP8: UPDATE MAIN GOAL
+            set<int>* res = new set<int>();
+            cout << "\n";
+            //cout << "goal size: " << goal->size() << "\nrule size: " << ruleCoverBlock->size() << "\n";
+            set_difference(main_goal->begin(), main_goal->end(), ruleCoverBlock->begin(), ruleCoverBlock->end(), inserter(*res, res->begin()));
+            delete main_goal;
+            main_goal = new set<int>(*res);
+            delete goal;
+            goal = new set<int>(*main_goal);
+            //cout << "NEXT GOAL WITHIN CONCEPT: ";
+            //printSet(goal);
+
+            //RESET FOR NEW RULE
+            for(vector<set<int>*>::iterator block = intersectedBlocks->begin(); block != intersectedBlocks->end(); ++block){
+                (*block)->clear();
+            }
+            intersectedBlocks->clear();
+            indexesSelected->clear();
+            delete ruleCoverBlock;
+            ruleCoverBlock = nullptr;
+
+            
+            // //update cover with selection
+            // if(ruleCoverBlock == nullptr){
+            //     //result of first column of rule generation filling current rule cover with original AVBlock set
+            //     ruleCoverBlock = new set<int>(*(m_All_avBlocks->at(currSelection)));
+            //     cout << "ruleCover due to FIRST selection: selected block=" << currSelection << "\n";
+            //     printSet(ruleCoverBlock);
+            // }
+            // else{
+            //     //result following columns of rule being generated intersecting rule cover with current selection 
+            //     set<int>* newRuleCover = new set<int>();
+            //     set_intersection(m_All_avBlocks->at(currSelection)->begin(),m_All_avBlocks->at(currSelection)->end(),ruleCoverBlock->begin(),ruleCoverBlock->end(), inserter(*newRuleCover,newRuleCover->begin()));
+            //     if(!newRuleCover->empty()){
+            //         delete ruleCoverBlock;
+            //         ruleCoverBlock = newRuleCover;
+            //     }
+            //     cout << "ruleCover after adding new selection: selected block=" << currSelection << "\n";
+            //     printSet(ruleCoverBlock);
+            // }
+            
+            // //check if rule is subset of concept, if so its finished
+            // if(isSubset(ruleCoverBlock, (* concept))){
+            //     finalRules->push_back(prodRuleStr(blockNames, indexesSelected, conceptNames->at(conceptIndex)));
+            //     finalRulesBBValues->push_back("("+to_string(indexesSelected->size())+","+to_string(ruleCoverBlock->size())+","+to_string(ruleCoverBlock->size())+")");
+            //     set<int>* res = new set<int>();
+            //     cout << "goal size: " << goal->size() << "\nrule size: " << ruleCoverBlock->size() << "\n";
+            //     set_difference(goal->begin(), goal->end(), ruleCoverBlock->begin(), ruleCoverBlock->end(), inserter(*res, res->begin()));
+            //     delete goal;
+            //     goal = res;
+            //     cout << "\nNEW GOAL:\n";
+            //     if(goal != nullptr){
+            //         printSet(goal);
+            //     }
+            //     else{cout << "goal is nullptr\n";}
+            //     cout << "\n\nNEXT--------------------------------------------------------->\n";
+            //     for(vector<set<int>*>::iterator block = intersectedBlocks->begin(); block != intersectedBlocks->end(); ++block){
+            //         (*block)->clear();
+            //         //delete *block;
+            //     }
+            //     intersectedBlocks->clear();
+            //     indexesSelected->clear();
+            //     delete ruleCoverBlock;
+            //     ruleCoverBlock = nullptr;//delete and set to nullptr so the next iteration inits ruleCoverBlock with first currSelection AVBlock
+            //     newIntersectionNeeded = true;
+            // }//continue generating unfinished rule
+            // else{
+            //     cout << "\nCover in progress: ";
+            //     printSet(ruleCoverBlock);
+            //     cout << "GOAL IN PROGRESS: ";
+            //     printSet(goal);
+            //     set<int>* subGoal = new set<int>();
+            //     cout << "goal size: " << goal->size() << "\nrule size: " << ruleCoverBlock->size() << "\n";
+            //     set_intersection(goal->begin(), goal->end(), m_All_avBlocks->at(currSelection)->begin(), m_All_avBlocks->at(currSelection)->end(), inserter(*subGoal, subGoal->begin()));
+            //     delete goal;
+            //     goal = subGoal;
+            //     //LEM2 table index that was selected while generating current SINGLE rule is cleared(i.e. put dash in row box already used)
+            //     for(vector<int>::iterator index = indexesSelected->begin(); index != indexesSelected->end(); ++index){
+            //         set<int>* lemColBlock = intersectedBlocks->at(*index);
+            //         if(!lemColBlock->empty()){
+            //             lemColBlock->clear();
+            //         }
+            //     }
+            //     newIntersectionNeeded = false;
+            // }
         }
+        cout << "GOAL WHEN MOVING ONTO NEXT CONCEPT: ";
+        printSet(goal);
+        cout << "\n";
         conceptIndex++;
     }  
 }
@@ -297,7 +398,6 @@ void Dataset<T>::LEM2(){
 
 //   return 0;
 // }
-
 template <class T>
 int Dataset<T>::selectBestIndex(vector<set<int>*>* inters, vector<int>* sizes){
     vector<set<int>*>::iterator interBlock = inters->begin();
