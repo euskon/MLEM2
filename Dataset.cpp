@@ -140,7 +140,6 @@ void Dataset<T>::LEM2(){
     for(vector<set<int>*>::iterator concept = m_decision->m_avBlocks->begin(); concept != m_decision->m_avBlocks->end(); ++concept){
         set<int>* goal = new set<int>(**concept);
         set<int>* main_goal = new set<int>(**concept);
-        bool newIntersectionNeeded = true;
 
         cout << "\n\nNEXT------------------------CONCEPT--------------------------------->\n";
         while(!main_goal->empty()){  
@@ -224,6 +223,13 @@ void Dataset<T>::LEM2(){
             }
             // cout << "OUTER LOOP END: cases covered by rule produced\n\t";
             // printSet(ruleCoverBlock);
+            bool first = true;
+            cout << "AVBlocks selected for use in rule: {";
+            for(int index : *indexesSelected){
+                if(first){ cout << index; first = false;}
+                else{ cout << ", " << index; }
+            }
+            cout << "}\n";
             //STEP7: Save generated rule in final rule set container 
             finalRules->push_back(prodRuleStr(blockNames, indexesSelected, conceptNames->at(conceptIndex)));
             finalRulesBBValues->push_back("("+to_string(indexesSelected->size())+","+to_string(ruleCoverBlock->size())+","+to_string(ruleCoverBlock->size())+")");
@@ -248,8 +254,8 @@ void Dataset<T>::LEM2(){
             delete ruleCoverBlock;
             ruleCoverBlock = nullptr;
         }
-        cout << "GOAL WHEN MOVING ONTO NEXT CONCEPT: ";
-        printSet(goal);
+        // cout << "GOAL WHEN MOVING ONTO NEXT CONCEPT: ";
+        // printSet(goal);
         cout << "\n";
         conceptIndex++;
     }  

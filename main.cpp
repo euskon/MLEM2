@@ -42,6 +42,7 @@ int main(int argc, char* argv[]){
         do{
             cout << "Please enter file name to output rules: ";
             cin >> outputFile;
+            outputFile += ".out.txt";
             outFile.open(outputFile);
         }while(!outFile.is_open());
     }
@@ -91,7 +92,6 @@ int main(int argc, char* argv[]){
         while(inFile >> data){
             row->push_back(data);
             currColNum++;
-            cout << currColNum << "\n";
             //enough items for a whole row; add row; reset;
             if(currColNum == numCols){
                 if(strDataset != nullptr){ strDataset->addRow(row); }
