@@ -5,9 +5,9 @@
 #include "Column.h"
 #include "Dataset.h"
 using namespace std;
-vector<Column<float>*>* buildDatasetFloat(){
-    return(new vector<Column<float>*>());
-}
+// vector<Column<float>*>* buildDatasetFloat(){
+//     return(new vector<Column<float>*>());
+// }
 vector<Column<string>*>* buildDatasetString(){
     return(new vector<Column<string>*>());
 }
@@ -23,14 +23,9 @@ bool isSymbolic(string input){
     }
     return true;
 }
-// void printRules(vector<string>* rules){
-//     for(vector<string>::iterator it = rules->begin(); it != rules->end(); ++it){
-//         cout << *it << "\n";
-//     }
-// }
 int main(int argc, char* argv[]){
     Dataset<string>* strDataset = nullptr;
-    Dataset<float>* fDataset = nullptr;
+    // Dataset<float>* fDataset = nullptr;
     int numCols = 0;
     string inputFile = " ";
     string outputFile = "MLEM2_output.txt";
@@ -64,8 +59,6 @@ int main(int argc, char* argv[]){
         vector<string>* row = new vector<string>();
         std::string data;
         int currColNum = 0;
-
-
         //1st line parser: parses column number
         while(inFile >> data && data != ">"){
             if(data == "<"){ numCols = 0; }
@@ -102,7 +95,7 @@ int main(int argc, char* argv[]){
             //enough items for a whole row; add row; reset;
             if(currColNum == numCols){
                 if(strDataset != nullptr){ strDataset->addRow(row); }
-                else{ fDataset->addRow(row); }
+                // else{ fDataset->addRow(row); }
                 row->clear();
                 currColNum = 0;
             }
@@ -110,7 +103,7 @@ int main(int argc, char* argv[]){
         inFile.close();
     }
     if(strDataset != nullptr){ strDataset->printDataset(); }
-    else if(fDataset != nullptr){ fDataset->printDataset(); }
+    // else if(fDataset != nullptr){ fDataset->printDataset(); }
     if(strDataset != nullptr){ 
         strDataset->populateAllUniques();
         cout << "finished populating uniques\n";
@@ -121,16 +114,15 @@ int main(int argc, char* argv[]){
         strDataset->printRulesToFile(outFile);
         
     }
-    else if(fDataset != nullptr){
-        fDataset->populateAllUniques();
-        cout << "finished populating uniques\n";
-        fDataset->populateAllAVBlocks();
-        fDataset->printAllAVBlocks();
-        fDataset->LEM2();
-        fDataset->printRules();
-        fDataset->printRulesToFile(outFile);
-    }
+    // else if(fDataset != nullptr){
+    //     fDataset->populateAllUniques();
+    //     cout << "finished populating uniques\n";
+    //     fDataset->populateAllAVBlocks();
+    //     fDataset->printAllAVBlocks();
+    //     fDataset->LEM2();
+    //     fDataset->printRules();
+    //     fDataset->printRulesToFile(outFile);
+    // }
     outFile.close();
-    //}
     return(0);
 }

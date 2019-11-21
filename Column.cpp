@@ -14,36 +14,36 @@ template <class T>
 void Column<T>::addValue(T val){
         m_values->push_back(val);
 }
-template <>
-void Column<float>::populateUniques(){
-        pair<set<float>::iterator, bool> ret;
-        for(vector<float>::iterator it = m_values->begin(); it != m_values->end(); ++it){
-                ret = m_uniqueVals->insert(*it);
-                if(ret.second){
-                        cout << "\tinserted: " << *it << "\n";
-                }
-        }
-        cout << "Finished populating Uniques before discretization...\n";
-        cout << "Discretization:\n";
-        //discretization: creates cutpoint and builds m_uniqueSym 
-        //                based on m_uniqueVals and the cutpoints
-        set<float>::iterator it = m_uniqueVals->begin();
-        set<float>::iterator itPlusOne = ++m_uniqueVals->begin();
-        set<float>::iterator beg = m_uniqueVals->begin();
-        set<float>::reverse_iterator end = m_uniqueVals->rbegin();
-        set<string>* intervals = new set<string>();
-        while(itPlusOne != m_uniqueVals->end()){
-                float avg = (*it + *itPlusOne)/2;
-                intervals->insert(to_string(*beg) + ".." + to_string(avg));
-                cout << "\tinserted: " << to_string(*beg) + ".." + to_string(avg) << "\n";
-                intervals->insert(to_string(avg) + ".." + to_string(*end));
-                cout << "\tinserted: " << to_string(avg) + ".." + to_string(*end) << "\n";
-                ++it;
-                ++itPlusOne;
-        }
-        cout << "Finished Discretization.\n";
-        m_uniqueSym = intervals;
-}
+// template <>
+// void Column<float>::populateUniques(){
+//         pair<set<float>::iterator, bool> ret;
+//         for(vector<float>::iterator it = m_values->begin(); it != m_values->end(); ++it){
+//                 ret = m_uniqueVals->insert(*it);
+//                 if(ret.second){
+//                         cout << "\tinserted: " << *it << "\n";
+//                 }
+//         }
+//         cout << "Finished populating Uniques before discretization...\n";
+//         cout << "Discretization:\n";
+//         //discretization: creates cutpoint and builds m_uniqueSym 
+//         //                based on m_uniqueVals and the cutpoints
+//         set<float>::iterator it = m_uniqueVals->begin();
+//         set<float>::iterator itPlusOne = ++m_uniqueVals->begin();
+//         set<float>::iterator beg = m_uniqueVals->begin();
+//         set<float>::reverse_iterator end = m_uniqueVals->rbegin();
+//         set<string>* intervals = new set<string>();
+//         while(itPlusOne != m_uniqueVals->end()){
+//                 float avg = (*it + *itPlusOne)/2;
+//                 intervals->insert(to_string(*beg) + ".." + to_string(avg));
+//                 cout << "\tinserted: " << to_string(*beg) + ".." + to_string(avg) << "\n";
+//                 intervals->insert(to_string(avg) + ".." + to_string(*end));
+//                 cout << "\tinserted: " << to_string(avg) + ".." + to_string(*end) << "\n";
+//                 ++it;
+//                 ++itPlusOne;
+//         }
+//         cout << "Finished Discretization.\n";
+//         m_uniqueSym = intervals;
+// }
 template <>
 void Column<string>::populateUniques(){
         if(isSymbolic(*m_values->begin()) || m_colType == 'd'){
@@ -90,33 +90,33 @@ void Column<string>::populateUniques(){
         }
 
 }
-template<>
-void Column<float>::populateAVBlocks(){
-        int caseIndex = 1;
-        float maxValOfInterval = *(m_uniqueVals->rbegin());
-        for(set<string>::iterator it = m_uniqueSym->begin(); it != m_uniqueSym->end(); ++it){
-                m_avBlocks->push_back(new set<int>());
-        }
-        vector<set<int>*>::iterator block = m_avBlocks->begin();
-        set<string>::iterator uniq = m_uniqueSym->begin();
-        while(block != m_avBlocks->end() && uniq != m_uniqueSym->end()){
-                caseIndex = 1;
-                float left = stof((*uniq).substr(0, (*uniq).find("..")));
-                float right = stof((*uniq).substr((*uniq).find("..") + 2));
-                for(vector<float>::iterator val = m_values->begin(); val != m_values->end(); ++val){
-                        //checking left side of interval with inclusive [L, R)
-                        if(left <= *val && *val < right){
-                                (*block)->insert(caseIndex);
-                        }
-                        else if(right == maxValOfInterval && left <= *val && *val <= right){
-                                (*block)->insert(caseIndex);
-                        }
-                        caseIndex++;
-                }
-                ++block;
-                ++uniq;
-        }
-}
+// template<>
+// void Column<float>::populateAVBlocks(){
+//         int caseIndex = 1;
+//         float maxValOfInterval = *(m_uniqueVals->rbegin());
+//         for(set<string>::iterator it = m_uniqueSym->begin(); it != m_uniqueSym->end(); ++it){
+//                 m_avBlocks->push_back(new set<int>());
+//         }
+//         vector<set<int>*>::iterator block = m_avBlocks->begin();
+//         set<string>::iterator uniq = m_uniqueSym->begin();
+//         while(block != m_avBlocks->end() && uniq != m_uniqueSym->end()){
+//                 caseIndex = 1;
+//                 float left = stof((*uniq).substr(0, (*uniq).find("..")));
+//                 float right = stof((*uniq).substr((*uniq).find("..") + 2));
+//                 for(vector<float>::iterator val = m_values->begin(); val != m_values->end(); ++val){
+//                         //checking left side of interval with inclusive [L, R)
+//                         if(left <= *val && *val < right){
+//                                 (*block)->insert(caseIndex);
+//                         }
+//                         else if(right == maxValOfInterval && left <= *val && *val <= right){
+//                                 (*block)->insert(caseIndex);
+//                         }
+//                         caseIndex++;
+//                 }
+//                 ++block;
+//                 ++uniq;
+//         }
+// }
 template<>
 void Column<string>::populateAVBlocks(){
         // int caseIndexMax = m_uniqueVals->size();
@@ -207,5 +207,3 @@ bool Column<T>::isSymbolic(string input){
     }
     return true;
 }
-// template class StrColumn<int>;
-// template class StrColumn<string>;
