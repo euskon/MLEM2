@@ -28,7 +28,7 @@ int main(int argc, char* argv[]){
     // Dataset<float>* fDataset = nullptr;
     int numCols = 0;
     string inputFile = " ";
-    string outputFile = "MLEM2_output.txt";
+    string outputFile = "";
     std::ifstream inFile;
     std::ofstream outFile;
 
@@ -42,17 +42,20 @@ int main(int argc, char* argv[]){
         do{
             cout << "Please enter file name to output rules: ";
             cin >> outputFile;
-            outputFile += ".out.txt";
             outFile.open(outputFile);
         }while(!outFile.is_open());
     }
     else if(argc == 2){//1 - cmd line arg
-        inFile.open(argv[1]);
+        inputFile = argv[1];
+        inFile.open(inputFile);
+        outputFile = inputFile + ".out.txt";
         outFile.open(outputFile);
     }
     else if(argc >= 3){//2 or more - cmd line arg
         inFile.open(argv[1]);
-        outFile.open(argv[2]);
+        outputFile += argv[2];
+        outputFile += ".out.txt";
+        outFile.open(outputFile);
     }
     
     if(inFile.is_open()){
@@ -90,14 +93,20 @@ int main(int argc, char* argv[]){
         strDataset = new Dataset<string>('s', colNames);
         //parse all rows
         while(inFile >> data){
-            row->push_back(data);
-            currColNum++;
-            //enough items for a whole row; add row; reset;
-            if(currColNum == numCols){
-                if(strDataset != nullptr){ strDataset->addRow(row); }
-                // else{ fDataset->addRow(row); }
-                row->clear();
-                currColNum = 0;
+            if(data.find("!") == std::string::npos){
+                row->push_back(data);
+                currColNum++;
+                //enough items for a whole row; add row; reset;
+                if(currColNum == numCols){
+                    if(strDataset != nullptr){ strDataset->addRow(row); }
+                    // else{ fDataset->addRow(row); }
+                    row->clear();
+                    currColNum = 0;
+                }
+            }
+            else{
+                char comment[256];
+                inFile.getline(comment, 256);
             }
         }
         inFile.close();

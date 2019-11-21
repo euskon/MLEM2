@@ -1,6 +1,0 @@
-(7,0,0)
-(a5,no)&(a4,0-2)&(a9,no)&(a6,2)&(a2,premeno)&(a7,left)&(a7,right)->(class,no-recurrence-events)
-
-(7,0,0)
-(a9,no)&(a5,no)&(a2,premeno)&(a7,left)&(a6,3)&(a4,0-2)&(a7,right)->(class,recurrence-events)
-
